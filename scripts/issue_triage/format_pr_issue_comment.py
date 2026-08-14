@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import os
 
-from parse_sections import BOT_HEADER, (
+from parse_sections import (
+    BOT_HEADER,
     changed_files_from_head,
     fallback,
     parse_sections,
