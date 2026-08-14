@@ -45,11 +45,11 @@ Do not modify code.
 When the issue is valid:
 
 1. Identify the root cause.
-2. Implement the smallest correct solution.
+2. Implement the smallest correct solution in production/source files only.
 3. Follow the existing architecture and coding style.
-4. Add or update tests when appropriate.
-5. Run relevant tests.
-6. Fix failures caused by your changes.
+4. Prefer editing existing product code over adding new files.
+5. Do not create or modify `.gitignore`, `Tests/`, smoke scripts, docs, or workflow files unless the issue is explicitly about those files.
+6. Run existing project tests if available. Do not invent new test suites or smoke runners.
 7. Review the final diff.
 8. Leave the workspace clean (see Workspace cleanliness).
 
@@ -65,14 +65,15 @@ GitHub Actions owns all git and GitHub operations.
 
 ## Workspace cleanliness
 
-Do not leave files that should not stay in git:
+Only solution/source files should remain for the PR:
 
-- Do not create or keep `.DS_Store`, `__pycache__/`, `*.pyc`, `*.log`, `tmp/`, or editor junk.
+- Good examples: `Classes/...`, `Configuration/...`, `Resources/...`, `ext_localconf.php`
+- Do not create or keep `.DS_Store`, `__pycache__/`, `*.pyc`, `*.log`, `tmp/`, smoke scripts, or editor junk.
 - Do not create or modify `.env`, credentials, keys, or secrets files.
-- Do not add unrelated new files, temporary scratch files, or debug dumps.
-- Do not change `.gitignore` unless required by the issue.
-- Before finishing, remove any accidental temporary files you created.
-- Only leave intentional source/test changes needed to fix the issue.
+- Do not create `Tests/` files, smoke runners, or temporary verification scripts for the PR.
+- Do not change `.gitignore`.
+- Before finishing, remove accidental temporary files you created.
+- If a temporary local file was needed for your own check, leave it untracked; it must not be part of the solution commit.
 
 ## Pull Request
 

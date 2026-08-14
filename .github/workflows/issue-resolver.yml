@@ -109,6 +109,7 @@ jobs:
           bash "${BOT_SCRIPTS}/detect_result.sh" /tmp/triage-result.txt
 
       - name: Comment Triage Result
+        if: env.RESULT != 'VALID_ISSUE'
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -195,17 +196,7 @@ jobs:
           cat > /tmp/existing-pr-comment.md <<EOF
           <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
-          ### 🔍 Issue Analysis
-
-          **Classification:** ✅ \`VALID_ISSUE\`
-
-          ### 🚀 Draft Pull Request
-
-          A draft Pull Request already exists for this issue:
-
-          ${PR_URL}
-
-          No new branch or Pull Request was created.
+          This issue already has a draft pull request: ${PR_URL}
           EOF
 
           gh issue comment "$ISSUE_NUMBER" \
@@ -288,18 +279,7 @@ jobs:
           cat > /tmp/no-change-comment.md <<EOF
           <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
-          ### 🔍 Issue Analysis
-
-          **Classification:** ✅ \`VALID_ISSUE\`
-
-          ### ⚠️ No Code Change
-
-          The issue was classified as valid, but Cursor did not make
-          any repository changes.
-
-          ### 📋 Analysis
-
-          $(cat /tmp/resolve-result.txt)
+          No solution source changes were produced for this issue.
 
           No Pull Request was created.
           EOF
@@ -313,46 +293,24 @@ jobs:
           env.RESULT == 'VALID_ISSUE' &&
           env.PR_ALREADY_EXISTS != 'true' &&
           steps.changes.outputs.has_changes == 'true'
+        id: commit
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          find . -name .DS_Store -type f -delete 2>/dev/null || true
-          find . -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
-          find . -name '*.pyc' -type f -delete 2>/dev/null || true
+          set +e
+          bash "${BOT_SCRIPTS}/stage_solution_files.sh"
+          STAGE_EXIT=$?
+          set -e
 
-          unexpected=""
-
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-
-            status="${line:0:2}"
-            path="${line:3}"
-            path="${path#\"}"
-            path="${path%\"}"
-
-            [ "$status" != "??" ] && continue
-
-            case "$path" in
-              .DS_Store|*/.DS_Store|__pycache__|__pycache__/*|*/__pycache__/*|*.pyc|*.log|tmp|tmp/*|temp|temp/*|_t3planet_ai_bot|_t3planet_ai_bot/*)
-                rm -rf -- "$path" 2>/dev/null || true
-                ;;
-              .env|.env.*|*.key|*.pem|*credential*|node_modules|node_modules/*)
-                unexpected="${unexpected}${path}"$'\n'
-                ;;
-            esac
-          done < <(git status --porcelain)
-
-          if [ -n "$unexpected" ]; then
+          if [ "$STAGE_EXIT" -eq 2 ]; then
             cat > /tmp/unexpected-files-comment.md <<EOF
           <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
-
-          ### ⚠️ Unexpected Files
 
           The automated fix produced files that must not be committed:
 
           \`\`\`
-          ${unexpected}
+          $(cat /tmp/dangerous-files.txt 2>/dev/null || true)
           \`\`\`
 
           No Pull Request was created.
@@ -366,35 +324,33 @@ jobs:
             exit 1
           fi
 
-          git add -u
+          if [ -z "$(git diff --cached --name-only)" ]; then
+            echo "has_solution_changes=false" >> "$GITHUB_OUTPUT"
 
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
+            cat > /tmp/no-solution-comment.md <<EOF
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
-            status="${line:0:2}"
-            path="${line:3}"
-            path="${path#\"}"
-            path="${path%\"}"
+          Only non-solution files were produced (for example tests, smoke scripts, or \`.gitignore\`). Those files are not pushed.
 
-            [ "$status" != "??" ] && continue
+          No Pull Request was created.
+          EOF
 
-            case "$path" in
-              .DS_Store|*/.DS_Store|__pycache__|__pycache__/*|*/__pycache__/*|*.pyc|*.log|tmp|tmp/*|.env|.env.*|*.key|*.pem|node_modules|node_modules/*|_t3planet_ai_bot|_t3planet_ai_bot/*)
-                continue
-                ;;
-            esac
+            gh issue comment "$ISSUE_NUMBER" \
+              --repo "${{ github.repository }}" \
+              --body-file /tmp/no-solution-comment.md
 
-            git add -- "$path"
-          done < <(git status --porcelain)
+            exit 0
+          fi
 
-          git diff --cached --name-only
+          echo "has_solution_changes=true" >> "$GITHUB_OUTPUT"
           git commit -m "Fix issue #${{ github.event.issue.number }}"
 
       - name: Push Issue Branch
         if: |
           env.RESULT == 'VALID_ISSUE' &&
           env.PR_ALREADY_EXISTS != 'true' &&
-          steps.changes.outputs.has_changes == 'true'
+          steps.changes.outputs.has_changes == 'true' &&
+          steps.commit.outputs.has_solution_changes == 'true'
         run: |
           git push --force-with-lease --set-upstream origin "${BRANCH_NAME}"
 
@@ -402,7 +358,8 @@ jobs:
         if: |
           env.RESULT == 'VALID_ISSUE' &&
           env.PR_ALREADY_EXISTS != 'true' &&
-          steps.changes.outputs.has_changes == 'true'
+          steps.changes.outputs.has_changes == 'true' &&
+          steps.commit.outputs.has_solution_changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -425,7 +382,8 @@ jobs:
         if: |
           env.RESULT == 'VALID_ISSUE' &&
           env.PR_ALREADY_EXISTS != 'true' &&
-          steps.changes.outputs.has_changes == 'true'
+          steps.changes.outputs.has_changes == 'true' &&
+          steps.commit.outputs.has_solution_changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}

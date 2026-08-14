@@ -82,17 +82,23 @@ RESOLVE THE ISSUE
 2. Understand the existing architecture.
 3. Review the original issue and all relevant comments.
 4. Identify the actual root cause.
-5. Implement the smallest correct solution.
+5. Implement the smallest correct solution in production/source
+   files only (for TYPO3 extensions: Classes/, Configuration/,
+   Resources/, ext_*.php, and similar product code).
 6. Follow existing coding style.
 7. Do not make unrelated changes.
-8. Add or update tests when appropriate.
-9. Run the appropriate tests.
-10. If tests fail because of your changes, investigate and fix them.
-11. Run the relevant tests again.
-12. Review the final git diff.
-13. Leave the workspace clean: delete any temporary, junk, or
-    unrelated files you created. Do not leave files that should
-    not stay in git (.DS_Store, __pycache__, logs, .env, keys).
+8. Do NOT create or modify:
+   - .gitignore
+   - Tests/ or tests/
+   - smoke scripts (*smoke*)
+   - AGENTS.md, README.md, LICENSE
+   - .github/ workflows or scripts
+9. Prefer fixing existing source files over adding new files.
+10. If you create temporary/local verification files, leave them
+    only in the workspace; GitHub Actions will not push them.
+11. Run existing project tests if available. Do not invent a new
+    test suite or smoke runner for this issue.
+12. Review the final git diff and keep only solution source files.
 
 ============================================================
 IMPORTANT
@@ -110,12 +116,12 @@ provided in the comments, do not make unrelated changes.
 TEST REQUIREMENT
 ============================================================
 
-You MUST run the appropriate tests for the changes.
+Run existing project tests when they already exist.
 
 Do not claim that tests passed unless you actually ran them.
 
-Report the exact test commands that were executed and their
-results.
+Do not create new Tests/, phpunit smoke scripts, or change
+.gitignore just to support verification.
 
 If no automated test is available or appropriate, explain why.
 
@@ -132,13 +138,13 @@ ROOT_CAUSE:
 <root cause>
 
 FILES_CHANGED:
-<files>
+<solution source files only>
 
 CHANGES_MADE:
 <changes>
 
 TESTS_EXECUTED:
-<exact test commands>
+<exact test commands or explanation>
 
 TEST_RESULTS:
 <test results>
@@ -146,6 +152,7 @@ TEST_RESULTS:
 IMPORTANT:
 
 Do not report tests as passed unless they were actually executed.
+List only solution source files in FILES_CHANGED.
 """
 
     write_text(output_path, prompt)

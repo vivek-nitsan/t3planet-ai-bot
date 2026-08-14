@@ -16,25 +16,9 @@ def main() -> None:
     triage_text = read_text(triage_path)
     sections = parse_sections(triage_text)
 
-    summary = fallback(
-        sections.get("SUMMARY"),
-        triage_text or "No summary was returned.",
-    )
-    root_cause = fallback(
-        sections.get("ROOT_CAUSE") or sections.get("ANALYSIS"),
-        triage_text or "No root cause was returned.",
-    )
-    recommendation = fallback(
-        sections.get("RECOMMENDATION"),
-        "Please review the issue details.",
-    )
     explanation = fallback(
         sections.get("ANALYSIS") or sections.get("ROOT_CAUSE") or sections.get("SUMMARY"),
         triage_text or "No explanation was returned.",
-    )
-    proposed_solution = fallback(
-        sections.get("PROPOSED_SOLUTION") or sections.get("RECOMMENDATION"),
-        "A solution will be implemented if a code change is required.",
     )
     required_information = fallback(
         sections.get("REQUIRED_INFORMATION"),
@@ -46,19 +30,9 @@ def main() -> None:
             [
                 BOT_HEADER,
                 "",
-                "### 🔍 Issue Analysis",
-                "",
-                "**Classification:** ❌ `NOT_AN_ISSUE`",
-                "",
-                "### ℹ️ Explanation",
+                "**No code change is needed.**",
                 "",
                 explanation,
-                "",
-                "### 📚 Recommendation",
-                "",
-                recommendation,
-                "",
-                "No code changes were made and no Pull Request was created.",
             ]
         )
     elif result == "NEEDS_INFORMATION":
@@ -66,41 +40,11 @@ def main() -> None:
             [
                 BOT_HEADER,
                 "",
-                "### 🔍 Issue Analysis",
-                "",
-                "**Classification:** ❓ `NEEDS_INFORMATION`",
-                "",
-                "### ❓ Information Required",
+                "**More information is needed:**",
                 "",
                 bullet_list(required_information),
                 "",
-                "Please provide the requested information in a new comment.",
-                "",
-                "I will re-check the issue when you provide the information.",
-            ]
-        )
-    elif result == "VALID_ISSUE":
-        comment = "\n".join(
-            [
-                BOT_HEADER,
-                "",
-                "### 🔍 Issue Analysis",
-                "",
-                "**Classification:** ✅ `VALID_ISSUE`",
-                "",
-                "### 📋 Summary",
-                "",
-                summary,
-                "",
-                "### 🔎 Root Cause",
-                "",
-                root_cause,
-                "",
-                "### 🛠️ Proposed Resolution",
-                "",
-                proposed_solution,
-                "",
-                "The issue has enough information to proceed with implementation.",
+                "Reply with these details and I will check the issue again.",
             ]
         )
     else:
@@ -108,19 +52,7 @@ def main() -> None:
             [
                 BOT_HEADER,
                 "",
-                "### 🔍 Issue Analysis",
-                "",
-                "**Classification:** ⚠️ `REVIEW_REQUIRED`",
-                "",
-                "### ⚠️ Warning",
-                "",
-                "The automated classification could not be determined.",
-                "",
-                "### 📋 Analysis",
-                "",
-                triage_text or "No analysis was returned.",
-                "",
-                "No code changes or Pull Request were created.",
+                "I could not classify this issue automatically. A maintainer should review it.",
             ]
         )
 
