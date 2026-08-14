@@ -2,24 +2,42 @@
 
 <br clear="all" />
 
-Public reusable GitHub Action workflow that triages GitHub Issues with Cursor and opens a draft PR when a code fix is needed.
+Public reusable GitHub Action that triages Issues with Cursor and opens a draft PR when a code fix is needed.
 
-Repository: https://github.com/vivek-nitsan/t3planet-ai-bot
+https://github.com/vivek-nitsan/t3planet-ai-bot
 
-## Features
+## Mandatory repository settings
 
-- Classifies issues as `VALID_ISSUE`, `NOT_AN_ISSUE`, or `NEEDS_INFORMATION`
-- Asks for missing details and re-runs when the reporter replies
-- Implements fixes with Cursor CLI
-- Opens a draft pull request with **solution source files only**
+Do these in **every** repository that uses the bot.
 
-## Use in any repository
+### 1. Actions permissions
 
-### 1. Add a repository secret
+Go to:
 
-Create `CURSOR_API_KEY` in the target repo (Cursor dashboard → API keys).
+**Settings → Actions → General**
 
-### 2. Add a thin workflow
+Under **Workflow permissions**:
+
+- Select **Read and write permissions**
+- Enable **Allow GitHub Actions to create and approve pull requests**
+
+The workflow needs these because it creates branches, comments on issues, adds labels, pushes code, and creates draft PRs.
+
+See GitHub docs: [Managing GitHub Actions settings for a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-the-default-github_token-permissions).
+
+### 2. Repository secret
+
+Go to:
+
+**Settings → Secrets and variables → Actions**
+
+Add:
+
+| Name | Value |
+|------|--------|
+| `CURSOR_API_KEY` | Cursor API key from the [Cursor dashboard](https://cursor.com/dashboard/api) |
+
+### 3. Workflow file
 
 Create `.github/workflows/t3planet-ai-bot.yml`:
 
@@ -55,42 +73,12 @@ jobs:
       base_branch: main
 ```
 
-See [`examples/caller-workflow.yml`](examples/caller-workflow.yml).
+Example: [`examples/caller-workflow.yml`](examples/caller-workflow.yml)
 
-### 3. Rules (`AGENTS.md`)
+## Optional
 
-You do **not** need an `AGENTS.md` in every project.
-
-- Canonical rules live in this bot: [`AGENTS.md`](AGENTS.md)
-- Optional: add a local `AGENTS.md` only for project-specific extras
-- The bot always loads bot rules from `/tmp/t3planet-ai-bot/AGENTS.md` during the run
-
-## Permitted files in automated PRs
-
-Only product/solution source is committed and pushed.
-
-### Allowed (examples)
-
-| Area | Examples |
-|------|----------|
-| PHP classes | `Classes/**/*.php` |
-| TYPO3 configuration | `Configuration/**/*` |
-| Extension templates/assets | `Resources/Private/**/*`, `Resources/Public/**/*` |
-| Extension entrypoints | `ext_localconf.php`, `ext_tables.php`, `ext_emconf.php` |
-| Metadata when required by the issue | `composer.json` |
-
-### Not allowed (never pushed)
-
-| Area | Examples |
-|------|----------|
-| Git meta | `.gitignore`, `.gitattributes` |
-| Tests / smoke | `Tests/**`, `tests/**`, `*smoke*` |
-| Docs / license / rules | `README.md`, `LICENSE`, `AGENTS.md`, most `Documentation/**` |
-| CI / tooling | `.github/**`, `.cursor/**` |
-| Secrets | `.env`, `*.key`, `*.pem` |
-| Junk | `.DS_Store`, `__pycache__/`, `*.log`, `tmp/` |
-
-If Cursor creates excluded files locally, the workflow skips them and does not push them.
+- Local `AGENTS.md` only for project-specific extras. Default rules are in this bot: [`AGENTS.md`](AGENTS.md)
+- Change `base_branch` if your default branch is not `main`
 
 ## Inputs
 
@@ -99,17 +87,10 @@ If Cursor creates excluded files locally, the workflow skips them and does not p
 | `bot_ref` | `v1` | Tag/ref of this repo used to load scripts |
 | `base_branch` | `main` | Default branch of the calling repository |
 
-## Secrets
+## Notes
 
-| Secret | Required | Description |
-|--------|----------|-------------|
-| `CURSOR_API_KEY` | yes | Cursor API key for `cursor-agent` |
-
-## Notes for public reuse
-
-- This repository must stay **public** (or callers need access) so other repos can `uses:` it.
+- This repository must stay **public** so other repos can call it.
 - Keep `bot_ref` aligned with the workflow ref (`@v1` → `bot_ref: v1`).
-- Each calling repo needs its own `CURSOR_API_KEY` secret (or an org secret).
 
 ## License
 
