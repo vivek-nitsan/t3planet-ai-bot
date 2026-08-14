@@ -52,6 +52,7 @@ jobs:
         run: |
           mkdir -p /tmp/t3planet-ai-bot
           cp -a _t3planet_ai_bot/scripts /tmp/t3planet-ai-bot/scripts
+          cp _t3planet_ai_bot/AGENTS.md /tmp/t3planet-ai-bot/AGENTS.md
           chmod +x /tmp/t3planet-ai-bot/scripts/issue_triage/*.sh
 
           mkdir -p .cursor

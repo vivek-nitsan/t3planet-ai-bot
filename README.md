@@ -11,7 +11,7 @@ Repository: https://github.com/vivek-nitsan/t3planet-ai-bot
 - Classifies issues as `VALID_ISSUE`, `NOT_AN_ISSUE`, or `NEEDS_INFORMATION`
 - Asks for missing details and re-runs when the reporter replies
 - Implements fixes with Cursor CLI
-- Opens a draft pull request on an issue branch
+- Opens a draft pull request with **solution source files only**
 
 ## Use in any repository
 
@@ -57,9 +57,40 @@ jobs:
 
 See [`examples/caller-workflow.yml`](examples/caller-workflow.yml).
 
-### 3. Add project rules (recommended)
+### 3. Rules (`AGENTS.md`)
 
-Copy [`examples/AGENTS.md`](examples/AGENTS.md) into your repository root and customize for your project.
+You do **not** need an `AGENTS.md` in every project.
+
+- Canonical rules live in this bot: [`AGENTS.md`](AGENTS.md)
+- Optional: add a local `AGENTS.md` only for project-specific extras
+- The bot always loads bot rules from `/tmp/t3planet-ai-bot/AGENTS.md` during the run
+
+## Permitted files in automated PRs
+
+Only product/solution source is committed and pushed.
+
+### Allowed (examples)
+
+| Area | Examples |
+|------|----------|
+| PHP classes | `Classes/**/*.php` |
+| TYPO3 configuration | `Configuration/**/*` |
+| Extension templates/assets | `Resources/Private/**/*`, `Resources/Public/**/*` |
+| Extension entrypoints | `ext_localconf.php`, `ext_tables.php`, `ext_emconf.php` |
+| Metadata when required by the issue | `composer.json` |
+
+### Not allowed (never pushed)
+
+| Area | Examples |
+|------|----------|
+| Git meta | `.gitignore`, `.gitattributes` |
+| Tests / smoke | `Tests/**`, `tests/**`, `*smoke*` |
+| Docs / license / rules | `README.md`, `LICENSE`, `AGENTS.md`, most `Documentation/**` |
+| CI / tooling | `.github/**`, `.cursor/**` |
+| Secrets | `.env`, `*.key`, `*.pem` |
+| Junk | `.DS_Store`, `__pycache__/`, `*.log`, `tmp/` |
+
+If Cursor creates excluded files locally, the workflow skips them and does not push them.
 
 ## Inputs
 

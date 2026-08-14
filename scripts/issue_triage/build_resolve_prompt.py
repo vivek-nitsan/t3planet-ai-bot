@@ -52,9 +52,12 @@ Reuse this analysis. Re-inspect the repository before changing code.
 IMPORTANT
 ============================================================
 
-FIRST read AGENTS.md.
+FIRST read /tmp/t3planet-ai-bot/AGENTS.md (bot rules).
 
-Follow ALL applicable instructions from AGENTS.md.
+If AGENTS.md exists at the repository root, also follow those
+project-specific rules.
+
+Follow ALL applicable instructions from those files.
 
 You are already working on:
 

@@ -39,7 +39,8 @@ Re-evaluate the COMPLETE issue using:
 - all relevant previous comments
 - the latest user comment
 - the repository
-- AGENTS.md
+- /tmp/t3planet-ai-bot/AGENTS.md
+- AGENTS.md at the repository root if it exists
 """
     else:
         response_context = """
@@ -77,9 +78,12 @@ CURRENT EVENT
 IMPORTANT
 ============================================================
 
-FIRST read AGENTS.md at the repository root.
+FIRST read /tmp/t3planet-ai-bot/AGENTS.md (bot rules).
 
-Follow ALL applicable instructions from AGENTS.md.
+If AGENTS.md exists at the repository root, also follow those
+project-specific rules.
+
+Follow ALL applicable instructions from those files.
 
 This is ONLY a TRIAGE operation.
 
