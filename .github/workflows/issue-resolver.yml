@@ -7,7 +7,7 @@ on:
         description: Git ref of vivek-nitsan/t3planet-ai-bot used to load scripts
         type: string
         required: false
-        default: v1
+        default: main
       base_branch:
         description: Default branch of the calling repository
         type: string
@@ -195,7 +195,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           cat > /tmp/existing-pr-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           This issue already has a draft pull request: ${PR_URL}
           EOF
@@ -278,7 +278,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           cat > /tmp/no-change-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           No solution source changes were produced for this issue.
 
@@ -306,7 +306,7 @@ jobs:
 
           if [ "$STAGE_EXIT" -eq 2 ]; then
             cat > /tmp/unexpected-files-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           The automated fix produced files that must not be committed:
 
@@ -329,7 +329,7 @@ jobs:
             echo "has_solution_changes=false" >> "$GITHUB_OUTPUT"
 
             cat > /tmp/no-solution-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           Only non-solution files were produced (for example tests, smoke scripts, or \`.gitignore\`). Those files are not pushed.
 

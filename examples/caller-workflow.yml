@@ -21,9 +21,9 @@ jobs:
         github.event.comment.user.type != 'Bot' &&
         contains(github.event.issue.labels.*.name, 'needs-information')
       )
-    uses: vivek-nitsan/t3planet-ai-bot/.github/workflows/issue-resolver.yml@v1
+    uses: vivek-nitsan/t3planet-ai-bot/.github/workflows/issue-resolver.yml@main
     secrets:
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
     with:
-      bot_ref: v1
+      bot_ref: main
       base_branch: main

@@ -16,7 +16,7 @@ HEADING_RE = re.compile(
 
 BOT_ICON_URL = (
     "https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/"
-    "v1/assets/bot-icon.png"
+    "main/assets/bot-icon.png"
 )
 
 BOT_HEADER = (

@@ -63,11 +63,11 @@ jobs:
         github.event.comment.user.type != 'Bot' &&
         contains(github.event.issue.labels.*.name, 'needs-information')
       )
-    uses: vivek-nitsan/t3planet-ai-bot/.github/workflows/issue-resolver.yml@v1
+    uses: vivek-nitsan/t3planet-ai-bot/.github/workflows/issue-resolver.yml@main
     secrets:
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
     with:
-      bot_ref: v1
+      bot_ref: main
       base_branch: main
 ```
 
@@ -82,7 +82,7 @@ Example: [`examples/caller-workflow.yml`](examples/caller-workflow.yml)
 
 | Input | Default | Description |
 |-------|---------|-------------|
-| `bot_ref` | `v1` | Tag/ref of this repo used to load scripts |
+| `bot_ref` | `main` | Branch/ref of this repo used to load scripts |
 | `base_branch` | `main` | Default branch of the calling repository |
 
 ## License
