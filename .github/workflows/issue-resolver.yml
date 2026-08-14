@@ -193,7 +193,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           cat > /tmp/existing-pr-comment.md <<EOF
-          ## 🤖 T3Planet AI Bot
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           ### 🔍 Issue Analysis
 
@@ -286,7 +286,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           cat > /tmp/no-change-comment.md <<EOF
-          ## 🤖 T3Planet AI Bot
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           ### 🔍 Issue Analysis
 
@@ -345,7 +345,7 @@ jobs:
 
           if [ -n "$unexpected" ]; then
             cat > /tmp/unexpected-files-comment.md <<EOF
-          ## 🤖 T3Planet AI Bot
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/v1/assets/bot-icon.png" width="28" height="28" alt="T3Planet AI Bot" /> **T3Planet AI Bot**
 
           ### ⚠️ Unexpected Files
 

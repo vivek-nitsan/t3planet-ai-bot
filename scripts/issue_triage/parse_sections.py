@@ -14,6 +14,16 @@ HEADING_RE = re.compile(
     r"CHANGES_MADE|TESTS_EXECUTED|TEST_RESULTS)\s*:"
 )
 
+BOT_ICON_URL = (
+    "https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/"
+    "v1/assets/bot-icon.png"
+)
+
+BOT_HEADER = (
+    f'<img src="{BOT_ICON_URL}" width="28" height="28" alt="T3Planet AI Bot" /> '
+    "**T3Planet AI Bot**"
+)
+
 
 def parse_sections(text: str) -> dict[str, str]:
     matches = list(HEADING_RE.finditer(text))

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 
-from parse_sections import (
+from parse_sections import BOT_HEADER, (
     changed_files_from_head,
     fallback,
     parse_sections,
@@ -50,7 +50,7 @@ def main() -> None:
 
     comment = "\n".join(
         [
-            "## 🤖 T3Planet AI Bot",
+            BOT_HEADER,
             "",
             "### 🔍 Issue Analysis",
             "",

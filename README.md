@@ -1,4 +1,6 @@
-# T3Planet AI Bot
+# <img src="assets/bot-icon.png" alt="T3Planet AI Bot" width="48" height="48" align="left" /> T3Planet AI Bot
+
+<br clear="all" />
 
 Public reusable GitHub Action workflow that triages GitHub Issues with Cursor and opens a draft PR when a code fix is needed.
 

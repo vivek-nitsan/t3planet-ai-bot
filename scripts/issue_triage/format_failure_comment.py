@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from parse_sections import read_text, write_text
+from parse_sections import BOT_HEADER, read_text, write_text
 
 TAIL_LINES = 80
 
@@ -64,7 +64,7 @@ def main() -> None:
 
     comment = "\n".join(
         [
-            "## 🤖 T3Planet AI Bot",
+            BOT_HEADER,
             "",
             "### ⚠️ Automation Failed",
             "",

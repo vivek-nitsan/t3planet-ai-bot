@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 
-from parse_sections import bullet_list, fallback, parse_sections, read_text, write_text
+from parse_sections import BOT_HEADER, bullet_list, fallback, parse_sections, read_text, write_text
 
 
 def main() -> None:
@@ -44,7 +44,7 @@ def main() -> None:
     if result == "NOT_AN_ISSUE":
         comment = "\n".join(
             [
-                "## 🤖 T3Planet AI Bot",
+                BOT_HEADER,
                 "",
                 "### 🔍 Issue Analysis",
                 "",
@@ -64,7 +64,7 @@ def main() -> None:
     elif result == "NEEDS_INFORMATION":
         comment = "\n".join(
             [
-                "## 🤖 T3Planet AI Bot",
+                BOT_HEADER,
                 "",
                 "### 🔍 Issue Analysis",
                 "",
@@ -82,7 +82,7 @@ def main() -> None:
     elif result == "VALID_ISSUE":
         comment = "\n".join(
             [
-                "## 🤖 T3Planet AI Bot",
+                BOT_HEADER,
                 "",
                 "### 🔍 Issue Analysis",
                 "",
@@ -106,7 +106,7 @@ def main() -> None:
     else:
         comment = "\n".join(
             [
-                "## 🤖 T3Planet AI Bot",
+                BOT_HEADER,
                 "",
                 "### 🔍 Issue Analysis",
                 "",
