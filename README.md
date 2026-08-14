@@ -2,9 +2,7 @@
 
 <br clear="all" />
 
-Public reusable GitHub Action that triages Issues with Cursor and opens a draft PR when a code fix is needed.
-
-https://github.com/vivek-nitsan/t3planet-ai-bot
+T3Planet AI Bot reviews GitHub Issues, classifies them, asks for missing information when needed, and creates a draft pull request when a code fix is required.
 
 ## Mandatory repository settings
 
@@ -77,7 +75,7 @@ Example: [`examples/caller-workflow.yml`](examples/caller-workflow.yml)
 
 ## Optional
 
-- Local `AGENTS.md` only for project-specific extras. Default rules are in this bot: [`AGENTS.md`](AGENTS.md)
+- Add a local `AGENTS.md` in your repository if you want project-specific rules. The bot always uses its default [`AGENTS.md`](AGENTS.md), then applies your local file if present.
 - Change `base_branch` if your default branch is not `main`
 
 ## Inputs
@@ -86,11 +84,6 @@ Example: [`examples/caller-workflow.yml`](examples/caller-workflow.yml)
 |-------|---------|-------------|
 | `bot_ref` | `v1` | Tag/ref of this repo used to load scripts |
 | `base_branch` | `main` | Default branch of the calling repository |
-
-## Notes
-
-- This repository must stay **public** so other repos can call it.
-- Keep `bot_ref` aligned with the workflow ref (`@v1` → `bot_ref: v1`).
 
 ## License
 
