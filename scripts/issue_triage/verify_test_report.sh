@@ -51,16 +51,44 @@ if [ -z "$(printf '%s' "$TEST_RESULTS" | tr -d '[:space:]')" ]; then
   exit 1
 fi
 
+# Detect real test-runner failure signals only.
+# Ignore narrative words such as "failure mode", class names like
+# ErrorHandler, and explanations that no suite exists.
 if printf '%s\n' "$TEST_RESULTS" | awk '
   {
     line = tolower($0)
+
+    # Strip common non-failure narratives before matching.
+    gsub(/failure[[:space:]]+modes?/, " ", line)
+    gsub(/this[[:space:]]+failure[[:space:]]+mode/, " ", line)
+    gsub(/error[[:space:]]*handler/, " ", line)
+    gsub(/errorhandler/, " ", line)
+    gsub(/not[[:space:]]+a[[:space:]]+(test[[:space:]]+)?(failed|failure|failures|error|errors)/, " ", line)
+    gsub(/no[[:space:]]+(test[[:space:]]+)?(failed|failure|failures|error|errors)/, " ", line)
+    gsub(/without[[:space:]]+(any[[:space:]]+)?(failed|failure|failures|error|errors)/, " ", line)
     gsub(/0[[:space:]]*(failed|failure|failures|error|errors)/, " ", line)
     gsub(/(failed|failure|failures|error|errors)[[:space:]]*:[[:space:]]*0/, " ", line)
-    gsub(/no[[:space:]]+(failed|failure|failures|error|errors)/, " ", line)
-    gsub(/without[[:space:]]+(failed|failure|failures|error|errors)/, " ", line)
-    gsub(/not[[:space:]]+an[[:space:]]+error/, " ", line)
-    if (line ~ /(failed|failure|failures|error|errors|not passed|unsuccessful)/) {
+    gsub(/n\/?a/, " ", line)
+
+    # Positive failure signals from real runners / clear claims.
+    if (line ~ /(^|[[:space:][:punct:]])(failures?|failed|errors?)[[:space:]]*:[[:space:]]*[1-9][0-9]*/) {
       found = 1
+    }
+    if (line ~ /(^|[[:space:][:punct:]])failures!/) {
+      found = 1
+    }
+    if (line ~ /(^|[[:space:][:punct:]])[0-9]+[[:space:]]+(tests?[[:space:]]+)?failed/) {
+      found = 1
+    }
+    if (line ~ /(tests?[[:space:]]+)?(failed|not[[:space:]]+passed|unsuccessful)/) {
+      # Require test context for bare "failed", or keep explicit phrases.
+      if (line ~ /tests?[[:space:]]+(failed|not[[:space:]]+passed|unsuccessful)/ \
+          || line ~ /(failed|not[[:space:]]+passed|unsuccessful)[[:space:]]+tests?/ \
+          || line ~ /test[[:space:]]+run[[:space:]]+(failed|was[[:space:]]+unsuccessful)/ \
+          || line ~ /(assertion|phpunit|unit[[:space:]]+test).*(failed|failure|failures|error|errors)/ \
+          || line ~ /(failed|failure|failures|error|errors).*(assertion|phpunit|unit[[:space:]]+test)/) {
+        found = 1
+      }
     }
   }
   END {
