@@ -13,6 +13,11 @@ on:
         type: string
         required: false
         default: main
+      cursor_agent_version:
+        description: Pinned Cursor agent CLI lab version (downloads.cursor.com/lab/<version>/...)
+        type: string
+        required: false
+        default: "2026.08.25-3e8eec8"
     secrets:
       CURSOR_API_KEY:
         required: true
@@ -50,15 +55,17 @@ jobs:
 
       - name: Prepare bot tools
         run: |
-          mkdir -p /tmp/t3planet-ai-bot
+          mkdir -p /tmp/t3planet-ai-bot/.cursor
           cp -a _t3planet_ai_bot/scripts /tmp/t3planet-ai-bot/scripts
           cp _t3planet_ai_bot/AGENTS.md /tmp/t3planet-ai-bot/AGENTS.md
           chmod +x /tmp/t3planet-ai-bot/scripts/issue_triage/*.sh
 
+          # Always use the bot sandbox in CI. Consumer .cursor/cli.json is ignored
+          # so a weaker allow-list cannot remove git/gh/curl denials.
+          cp _t3planet_ai_bot/.cursor/cli.json /tmp/t3planet-ai-bot/.cursor/cli.json
+
           mkdir -p .cursor
-          if [ ! -f .cursor/cli.json ]; then
-            cp _t3planet_ai_bot/.cursor/cli.json .cursor/cli.json
-          fi
+          cp /tmp/t3planet-ai-bot/.cursor/cli.json .cursor/cli.json
 
           # Keep bot checkout out of the caller workspace / commits
           rm -rf _t3planet_ai_bot
@@ -75,10 +82,30 @@ jobs:
           fi
 
       - name: Install Cursor CLI
+        env:
+          CURSOR_AGENT_VERSION: ${{ inputs.cursor_agent_version }}
         run: |
-          curl https://cursor.com/install -fsS | bash
-          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
-          cursor-agent --version
+          set -euo pipefail
+          VERSION="${CURSOR_AGENT_VERSION}"
+          ARCH="$(uname -m)"
+          case "${ARCH}" in
+            x86_64|amd64) ARCH="x64" ;;
+            aarch64|arm64) ARCH="arm64" ;;
+            *)
+              echo "Unsupported architecture: ${ARCH}"
+              exit 1
+              ;;
+          esac
+
+          DOWNLOAD_URL="https://downloads.cursor.com/lab/${VERSION}/linux/${ARCH}/agent-cli-package.tar.gz"
+          INSTALL_DIR="${HOME}/.local/share/cursor-agent/versions/${VERSION}"
+          BIN_DIR="${HOME}/.cursor/bin"
+
+          mkdir -p "${INSTALL_DIR}" "${BIN_DIR}"
+          curl -fsSL "${DOWNLOAD_URL}" | tar --strip-components=1 -xzf - -C "${INSTALL_DIR}"
+          ln -sfn "${INSTALL_DIR}/cursor-agent" "${BIN_DIR}/cursor-agent"
+          echo "${BIN_DIR}" >> "$GITHUB_PATH"
+          "${BIN_DIR}/cursor-agent" --version
 
       - name: Collect Issue Context
         env:
@@ -160,6 +187,8 @@ jobs:
         run: |
           git reset --hard HEAD
           git clean -fd
+          mkdir -p .cursor
+          cp /tmp/t3planet-ai-bot/.cursor/cli.json .cursor/cli.json
 
       - name: Check Existing Pull Request
         if: env.RESULT == 'VALID_ISSUE'
@@ -195,7 +224,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           cat > /tmp/existing-pr-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="20" height="20" align="absmiddle" alt="T3Planet AI Bot" /> <strong>T3Planet AI Bot</strong>
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="22" height="22" align="absmiddle" alt="" /> <strong>T3Planet AI Bot</strong>
 
           This issue already has a draft pull request: ${PR_URL}
           EOF
@@ -209,6 +238,8 @@ jobs:
           env.RESULT == 'VALID_ISSUE' &&
           env.PR_ALREADY_EXISTS != 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           BASE_BRANCH: ${{ inputs.base_branch }}
         run: |
           git config user.name "T3Planet AI Bot"
@@ -218,10 +249,23 @@ jobs:
           git fetch origin "${BRANCH_NAME}" || true
 
           if git show-ref --verify --quiet "refs/remotes/origin/${BRANCH_NAME}"; then
-            git checkout -B "${BRANCH_NAME}" "origin/${BASE_BRANCH}"
-          else
-            git checkout -b "${BRANCH_NAME}"
+            cat > /tmp/branch-exists-comment.md <<EOF
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="22" height="22" align="absmiddle" alt="" /> <strong>T3Planet AI Bot</strong>
+
+          Branch \`${BRANCH_NAME}\` already exists on the remote, but there is no open pull request.
+
+          Refusing to overwrite it. Delete or reopen that branch/PR, then re-run the workflow.
+          EOF
+
+            gh issue comment "$ISSUE_NUMBER" \
+              --repo "${{ github.repository }}" \
+              --body-file /tmp/branch-exists-comment.md
+
+            echo "FAILURE_ALREADY_COMMENTED=true" >> "$GITHUB_ENV"
+            exit 1
           fi
+
+          git checkout -B "${BRANCH_NAME}" "origin/${BASE_BRANCH}"
 
       - name: Resolve Issue with Cursor
         if: |
@@ -278,7 +322,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           cat > /tmp/no-change-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="20" height="20" align="absmiddle" alt="T3Planet AI Bot" /> <strong>T3Planet AI Bot</strong>
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="22" height="22" align="absmiddle" alt="" /> <strong>T3Planet AI Bot</strong>
 
           No solution source changes were produced for this issue.
 
@@ -306,7 +350,7 @@ jobs:
 
           if [ "$STAGE_EXIT" -eq 2 ]; then
             cat > /tmp/unexpected-files-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="20" height="20" align="absmiddle" alt="T3Planet AI Bot" /> <strong>T3Planet AI Bot</strong>
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="22" height="22" align="absmiddle" alt="" /> <strong>T3Planet AI Bot</strong>
 
           The automated fix produced files that must not be committed:
 
@@ -329,7 +373,7 @@ jobs:
             echo "has_solution_changes=false" >> "$GITHUB_OUTPUT"
 
             cat > /tmp/no-solution-comment.md <<EOF
-          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="20" height="20" align="absmiddle" alt="T3Planet AI Bot" /> <strong>T3Planet AI Bot</strong>
+          <img src="https://raw.githubusercontent.com/vivek-nitsan/t3planet-ai-bot/main/assets/bot-icon.png" width="22" height="22" align="absmiddle" alt="" /> <strong>T3Planet AI Bot</strong>
 
           Only non-solution files were produced (for example tests, smoke scripts, or \`.gitignore\`). Those files are not pushed.
 
@@ -353,7 +397,7 @@ jobs:
           steps.changes.outputs.has_changes == 'true' &&
           steps.commit.outputs.has_solution_changes == 'true'
         run: |
-          git push --force-with-lease --set-upstream origin "${BRANCH_NAME}"
+          git push --set-upstream origin "${BRANCH_NAME}"
 
       - name: Create Draft Pull Request
         if: |
@@ -369,11 +413,12 @@ jobs:
         run: |
           python3 "${BOT_SCRIPTS}/format_pr_body.py"
 
+          # Title comes from a file so ISSUE_TITLE is never expanded by bash.
           PR_URL=$(gh pr create \
             --repo "${{ github.repository }}" \
             --base "${BASE_BRANCH}" \
             --head "${BRANCH_NAME}" \
-            --title "Fix #${ISSUE_NUMBER}: ${ISSUE_TITLE}" \
+            --title "$(cat /tmp/pr-title.txt)" \
             --body-file /tmp/pr-body.md \
             --draft)
 
@@ -402,6 +447,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python3 "${BOT_SCRIPTS}/format_failure_comment.py"
 

@@ -19,6 +19,7 @@ def main() -> None:
     issue_number = os.environ["ISSUE_NUMBER"]
     issue_title = os.environ.get("ISSUE_TITLE") or ""
     output_path = os.environ.get("PR_BODY_PATH", "/tmp/pr-body.md")
+    title_path = os.environ.get("PR_TITLE_PATH", "/tmp/pr-title.txt")
 
     resolve_text = read_text("/tmp/resolve-result.txt")
     triage_text = read_text("/tmp/triage-result.txt")
@@ -80,11 +81,15 @@ def main() -> None:
             "",
             "Please review the changes before merging.",
             "",
-            "Closes #" + issue_number,
+            "Relates to #" + issue_number,
         ]
     )
 
     write_text(output_path, body)
+
+    # Write title via Python so the workflow never expands ISSUE_TITLE in bash.
+    title = f"Fix #{issue_number}: {issue_title}".replace("\n", " ").strip()
+    write_text(title_path, title)
 
 
 if __name__ == "__main__":

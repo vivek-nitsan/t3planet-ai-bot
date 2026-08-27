@@ -16,13 +16,19 @@ is_excluded() {
     Tests|Tests/*|*/Tests/*|tests|tests/*|*/tests/*)
       return 0
       ;;
+    Documentation|Documentation/*|*/Documentation/*|docs|docs/*|*/docs/*)
+      return 0
+      ;;
+    vendor|vendor/*|node_modules|node_modules/*)
+      return 0
+      ;;
     *smoke*|*Smoke*|*SMOKE*)
       return 0
       ;;
     .DS_Store|*/.DS_Store|__pycache__|__pycache__/*|*/__pycache__/*|*.pyc|*.log|tmp|tmp/*|temp|temp/*)
       return 0
       ;;
-    .env|.env.*|*.key|*.pem|*credential*|node_modules|node_modules/*)
+    .env|.env.*)
       return 0
       ;;
   esac
@@ -32,9 +38,27 @@ is_excluded() {
 
 is_dangerous() {
   local path="$1"
+  local base
+  base="$(basename "$path")"
 
   case "$path" in
-    .env|.env.*|*.key|*.pem|*credential*|node_modules|node_modules/*)
+    .env|.env.*)
+      return 0
+      ;;
+  esac
+
+  case "$base" in
+    *.key|*.pem)
+      return 0
+      ;;
+    .env|.env.*)
+      return 0
+      ;;
+  esac
+
+  # Exact secret-like basenames only — do not match CredentialValidator.php.
+  case "$base" in
+    credentials|credentials.json|credentials.yml|credentials.yaml|credential.json)
       return 0
       ;;
   esac

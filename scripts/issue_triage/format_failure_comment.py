@@ -6,24 +6,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from parse_sections import BOT_HEADER, read_text, write_text
-
-TAIL_LINES = 80
-
-
-def tail_text(path: str, lines: int = TAIL_LINES) -> str:
-    text = read_text(path)
-    if not text:
-        return ""
-
-    parts = text.splitlines()
-    clipped = parts[-lines:]
-    body = "\n".join(clipped).strip()
-
-    if len(parts) > lines:
-        return f"... truncated to last {lines} lines ...\n\n{body}"
-
-    return body
+from parse_sections import BOT_HEADER, write_text
 
 
 def detect_stage() -> str:
@@ -31,7 +14,10 @@ def detect_stage() -> str:
     if stage:
         return stage
 
-    return read_text("/tmp/cursor-stage.txt") or "unknown"
+    try:
+        return Path("/tmp/cursor-stage.txt").read_text(encoding="utf-8").strip() or "unknown"
+    except FileNotFoundError:
+        return "unknown"
 
 
 def detect_exit_code() -> str:
@@ -39,52 +25,58 @@ def detect_exit_code() -> str:
     if code:
         return code
 
-    return read_text("/tmp/cursor-exit-code.txt") or "unknown"
+    try:
+        return Path("/tmp/cursor-exit-code.txt").read_text(encoding="utf-8").strip() or "unknown"
+    except FileNotFoundError:
+        return "unknown"
 
 
 def main() -> None:
     output_path = os.environ.get("FAILURE_COMMENT_PATH", "/tmp/failure-comment.md")
     stage = detect_stage()
     exit_code = detect_exit_code()
+    run_url = (os.environ.get("GITHUB_RUN_URL") or "").strip()
 
-    resolve_excerpt = tail_text("/tmp/resolve-result.txt")
-    triage_excerpt = tail_text("/tmp/triage-result.txt")
-
-    if stage == "resolve" or resolve_excerpt:
-        excerpt = resolve_excerpt or triage_excerpt
+    if stage == "resolve":
         headline = "The automated implementation step failed."
     elif stage == "triage":
-        excerpt = triage_excerpt
         headline = "The automated triage step failed."
     else:
-        excerpt = resolve_excerpt or triage_excerpt
         headline = "The automated issue workflow failed."
 
-    details = excerpt or "No Cursor output was captured."
+    lines = [
+        BOT_HEADER,
+        "",
+        "### Automation Failed",
+        "",
+        headline,
+        "",
+        f"**Stage:** `{stage}`",
+        "",
+        f"**Exit code:** `{exit_code}`",
+        "",
+    ]
 
-    comment = "\n".join(
-        [
-            BOT_HEADER,
-            "",
-            "### ⚠️ Automation Failed",
-            "",
-            headline,
-            "",
-            f"**Stage:** `{stage}`",
-            "",
-            f"**Exit code:** `{exit_code}`",
-            "",
-            "### 📋 Details",
-            "",
-            "```",
-            details,
-            "```",
-            "",
-            "No Pull Request was created. A maintainer can re-run the workflow after checking the failure.",
-        ]
+    if run_url:
+        lines.extend(
+            [
+                f"See the [Actions log]({run_url}) for details.",
+                "",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "See the GitHub Actions log for this run for details.",
+                "",
+            ]
+        )
+
+    lines.append(
+        "No Pull Request was created. A maintainer can re-run the workflow after checking the failure."
     )
 
-    write_text(output_path, comment)
+    write_text(output_path, "\n".join(lines))
     print(f"Wrote failure comment to {Path(output_path)}")
 
 

@@ -9,27 +9,35 @@ if [ ! -s "$RESULT_FILE" ]; then
   exit 1
 fi
 
+# Prefer "RESULT: VALID_ISSUE" on one line; also accept RESULT: then value on the next line.
+# Never invent VALID_ISSUE from free-text substrings.
 RESULT=$(
-  grep -Eio \
-    'RESULT:[[:space:]]*(VALID_ISSUE|NOT_AN_ISSUE|NEEDS_INFORMATION)' \
-    "$RESULT_FILE" \
-    | head -n 1 \
-    | sed -E 's/.*RESULT:[[:space:]]*//' \
-    | tr '[:lower:]' '[:upper:]' \
-    | tr -d '\r' \
-    | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+  awk '
+    {
+      line = $0
+      sub(/\r$/, "", line)
+    }
+    tolower(line) ~ /^[[:space:]]*result:[[:space:]]*(valid_issue|not_an_issue|needs_information)[[:space:]]*$/ {
+      sub(/^[^:]+:[[:space:]]*/, "", line)
+      gsub(/[[:space:]]/, "", line)
+      print toupper(line)
+      exit
+    }
+    tolower(line) ~ /^[[:space:]]*result:[[:space:]]*$/ {
+      if (getline nextline <= 0) exit
+      sub(/\r$/, "", nextline)
+      gsub(/[[:space:]]/, "", nextline)
+      value = toupper(nextline)
+      if (value == "VALID_ISSUE" || value == "NOT_AN_ISSUE" || value == "NEEDS_INFORMATION") {
+        print value
+        exit
+      }
+    }
+  ' "$RESULT_FILE"
 ) || true
 
 if [ -z "$RESULT" ]; then
-  if grep -Eiq '\bNOT_AN_ISSUE\b' "$RESULT_FILE"; then
-    RESULT="NOT_AN_ISSUE"
-  elif grep -Eiq '\bNEEDS_INFORMATION\b' "$RESULT_FILE"; then
-    RESULT="NEEDS_INFORMATION"
-  elif grep -Eiq '\bVALID_ISSUE\b' "$RESULT_FILE"; then
-    RESULT="VALID_ISSUE"
-  else
-    RESULT="REVIEW_REQUIRED"
-  fi
+  RESULT="REVIEW_REQUIRED"
 fi
 
 echo "Detected classification: ${RESULT}"

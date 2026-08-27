@@ -19,11 +19,11 @@ BOT_ICON_URL = (
     "main/assets/bot-icon.png"
 )
 
-# GitHub comment HTML: align=absmiddle keeps the icon vertically centered
-# with the title. Prefer <strong> over markdown ** so both stay inline HTML.
+# Inline img + strong (no table) so GitHub does not draw a bordered box.
+# align=absmiddle vertically centers the icon with the title text.
 BOT_HEADER = (
-    f'<img src="{BOT_ICON_URL}" width="20" height="20" '
-    f'align="absmiddle" alt="T3Planet AI Bot" /> '
+    f'<img src="{BOT_ICON_URL}" width="22" height="22" '
+    f'align="absmiddle" alt="" /> '
     "<strong>T3Planet AI Bot</strong>"
 )
 

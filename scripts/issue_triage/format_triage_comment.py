@@ -53,6 +53,8 @@ def main() -> None:
                 BOT_HEADER,
                 "",
                 "I could not classify this issue automatically. A maintainer should review it.",
+                "",
+                explanation,
             ]
         )
 
