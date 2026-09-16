@@ -51,6 +51,10 @@ def main() -> None:
     test_results = fallback(resolve_sections.get("TEST_RESULTS"), "")
     tests = tests_executed if not test_results else tests_executed + "\n\n" + test_results
 
+    project_tests = read_text("/tmp/project-test-status.txt")
+    if project_tests:
+        tests = tests + "\n\n### Project suite (Actions)\n\n" + project_tests
+
     body = "\n".join(
         [
             BOT_HEADER,

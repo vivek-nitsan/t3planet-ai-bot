@@ -102,6 +102,11 @@ Draft PRs still need a human to review and merge.
 - **`base_branch`:** set if the default branch is not `main`.
 - **`cursor_agent_version`:** pin or upgrade the Cursor CLI lab build (see Inputs).
 
+## Tests
+
+- **Bot scripts:** run `bash tests/run.sh` (also runs in CI on this repo).
+- **Consumer extensions:** if the project already has `Tests/`, `tests/`, or `phpunit.xml`, the bot reviews them by running `vendor/bin/phpunit` (or `phpunit`) after a fix. If a suite exists but phpunit is not installed in the Actions job, the run fails and no PR is opened.
+
 ## Versioning (tags)
 
 `@main` always uses the latest bot code. That is fine for trying things out, but a change on `main` can break callers without warning.

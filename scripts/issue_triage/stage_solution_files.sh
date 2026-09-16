@@ -1,75 +1,20 @@
 #!/usr/bin/env bash
-# Stage only solution source files for the automated PR.
-# Excluded paths are left untracked / unstaged and are never pushed.
+# Stage only AGENTS.md-permitted solution source files for the automated PR.
+# Deny-by-default: anything not on the allowlist is skipped (not pushed).
+# Dangerous secret paths abort the job.
 set -euo pipefail
 
-is_excluded() {
-  local path="$1"
-
-  case "$path" in
-    .gitignore|.gitattributes|AGENTS.md|README.md|LICENSE|LICENSE.md)
-      return 0
-      ;;
-    .github|.github/*|.cursor|.cursor/*|_t3planet_ai_bot|_t3planet_ai_bot/*)
-      return 0
-      ;;
-    Tests|Tests/*|*/Tests/*|tests|tests/*|*/tests/*)
-      return 0
-      ;;
-    Documentation|Documentation/*|*/Documentation/*|docs|docs/*|*/docs/*)
-      return 0
-      ;;
-    vendor|vendor/*|node_modules|node_modules/*)
-      return 0
-      ;;
-    *smoke*|*Smoke*|*SMOKE*)
-      return 0
-      ;;
-    .DS_Store|*/.DS_Store|__pycache__|__pycache__/*|*/__pycache__/*|*.pyc|*.log|tmp|tmp/*|temp|temp/*)
-      return 0
-      ;;
-    .env|.env.*)
-      return 0
-      ;;
-  esac
-
-  return 1
-}
-
-is_dangerous() {
-  local path="$1"
-  local base
-  base="$(basename "$path")"
-
-  case "$path" in
-    .env|.env.*)
-      return 0
-      ;;
-  esac
-
-  case "$base" in
-    *.key|*.pem)
-      return 0
-      ;;
-    .env|.env.*)
-      return 0
-      ;;
-  esac
-
-  # Exact secret-like basenames only — do not match CredentialValidator.php.
-  case "$base" in
-    credentials|credentials.json|credentials.yml|credentials.yaml|credential.json)
-      return 0
-      ;;
-  esac
-
-  return 1
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=path_rules.sh
+source "${SCRIPT_DIR}/path_rules.sh"
 
 # Remove junk so it does not linger
 find . -name .DS_Store -type f -delete 2>/dev/null || true
 find . -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
 find . -name '*.pyc' -type f -delete 2>/dev/null || true
+
+# Bot sandbox restore must never look like a product change
+rm -rf .cursor
 
 git reset >/dev/null 2>&1 || true
 
@@ -95,9 +40,9 @@ while IFS= read -r line; do
     continue
   fi
 
-  if is_excluded "$path"; then
+  if ! is_allowed "$path"; then
     skipped="${skipped}${path}"$'\n'
-    # Discard tracked modifications to excluded files so they are not pushed
+    # Discard tracked modifications to non-solution files so they are not pushed
     if [ "$status" != "??" ] && [ "$status" != "A " ]; then
       git checkout -- "$path" 2>/dev/null || true
     fi

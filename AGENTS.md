@@ -93,7 +93,10 @@ Even if created locally for debugging, these must not be committed by the bot:
 | Junk / temp | `.DS_Store`, `__pycache__/`, `*.pyc`, `*.log`, `tmp/`, `temp/` |
 | Dependencies | `node_modules/**`, vendor install noise |
 
-GitHub Actions enforces this at commit time: non-solution files are skipped and not pushed.
+GitHub Actions enforces this at commit time with an **allowlist**: only
+`Classes/`, `Configuration/`, `Resources/Private/`, `Resources/Public/`,
+extension entrypoints (`ext_*.php` / related), and `composer.json` may be
+staged. Everything else is skipped and not pushed.
 
 ## Git and GitHub Actions
 

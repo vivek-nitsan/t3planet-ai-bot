@@ -99,8 +99,9 @@ RESOLVE THE ISSUE
 9. Prefer fixing existing source files over adding new files.
 10. If you create temporary/local verification files, leave them
     only in the workspace; GitHub Actions will not push them.
-11. Run existing project tests if available. Do not invent a new
-    test suite or smoke runner for this issue.
+11. If the repository already has Tests/, tests/, or phpunit.xml,
+    review and run that existing suite. Do not invent a new test
+    suite or smoke runner for this issue.
 12. Review the final git diff and keep only solution source files.
 
 ============================================================
@@ -119,7 +120,9 @@ provided in the comments, do not make unrelated changes.
 TEST REQUIREMENT
 ============================================================
 
-Run existing project tests when they already exist.
+If the project already has a test suite (Tests/, tests/, or
+phpunit.xml), you MUST review it and run it when the runner is
+available (for example vendor/bin/phpunit).
 
 Do not claim that tests passed unless you actually ran them.
 
