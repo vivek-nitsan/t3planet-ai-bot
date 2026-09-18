@@ -91,10 +91,10 @@ Copy-paste example: [`examples/caller-workflow.yml`](examples/caller-workflow.ym
 | Trigger | Behavior |
 |---------|----------|
 | Issue **opened** | Triage (and fix if valid). Any GitHub user who can open an issue can start a run. |
-| Label **`t3planet-ai`** added | Re-run triage/fix (useful to retry or pick up a community issue). |
+| Label **`t3planet-ai`** added | Re-run triage/fix (useful to retry). |
 | Comment on an issue with **`needs-information`** | Re-evaluate with the new details (bot comments are ignored). |
 
-Draft PRs still need a human to review and merge.
+The bot opens **draft** pull requests only. A human reviews and merges; the bot never merges.
 
 ## Optional configuration
 
